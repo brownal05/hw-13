@@ -35,10 +35,10 @@ function xScale(census, chosenXAxis) {
 
 function yScale(census, chosenYAxis) {
     var yLinearScale = d3.scaleLinear()
-        .domain([d3.min(census, d=> d[chosenYAxis]) * -0.1 ,
-            d3.max(census, d=> d[chosenYAxis]) 
+        .domain([d3.min(census, d=> d[chosenYAxis]) * 0.1 ,
+            d3.max(census, d=> d[chosenYAxis]) * 1.2
         ])
-        .range([height, 0]);
+        .range([height, 0 ]);
     return yLinearScale;
 
 }
@@ -59,11 +59,12 @@ function renderYAxes(newYScale, yAxis) {
         .call(leftAxis);
     return yAxis;
 }
-function renderXCircles(circlesGroup, newXScale, chosenXAxis) {
+function renderXCircles(circlesGroup, newXScale, chosenXAxis, textGroup) {
 
     circlesGroup.transition()
         .duration(1000)
         .attr("cx", d => newXScale(d[chosenXAxis]))
+
     return circlesGroup;
 }
 
@@ -72,8 +73,27 @@ function renderYCircles(circlesGroup, newYScale, chosenYAxis) {
     circlesGroup.transition()
         .duration(1000)
         .attr("cy", d => newYScale(d[chosenYAxis]))
+
     return circlesGroup;
 }
+
+function yrenderText(textGroup, newYScale, chosenYAxis)  {
+
+    textGroup.transition()
+        .duration(1000)
+        .attr("cy", d => newYScale(d[chosenYAxis]))
+    return textGroup;
+}
+
+function xrenderText(textGroup, newXScale, chosenXAxis)  {
+
+    textGroup.transition()
+        .duration(1000)
+        .attr("cx", d => newXScale(d[chosenXAxis]))
+    return textGroup;
+}
+
+
 function updateToolTip(chosenXAxis, chosenYAxis, circlesGroup) {
 //this should be a switch case
     switch(chosenYAxis){
@@ -114,8 +134,9 @@ function updateToolTip(chosenXAxis, chosenYAxis, circlesGroup) {
     return circlesGroup;
 };
 
+
 d3.csv("./assets/data/data.csv", function(census) {
-    console.log(census)
+    // console.log(census)
    
     
     census.forEach(function(data){
@@ -130,12 +151,9 @@ d3.csv("./assets/data/data.csv", function(census) {
 
     var xLinearScale = xScale(census, chosenXAxis);
 
-    // yScale(census, chosenYAxis)
     var yLinearScale = yScale(census, chosenYAxis)
     
-    // d3.scaleLinear()
-    //     .domain([0, chosenYAxis])
-    //     .range([height]);
+
 
     var bottomAxis = d3.axisBottom(xLinearScale);
     var leftAxis = d3.axisLeft(yLinearScale);
@@ -149,23 +167,29 @@ d3.csv("./assets/data/data.csv", function(census) {
         .classed("y-axis", true)
         .attr("transform", `translate(-1, 0 )`)
         .call(leftAxis)    
-    console.log(yAxis)
-    // chartGroup.append("g")
-    //     .call(leftAxis);
+
 
     var circlesGroup = chartGroup.selectAll("circle")
         .data(census)
         .enter()
         .append("circle")
-        .text(d => d.state)
         .attr("cx", d => xLinearScale(d[chosenXAxis]))
         .attr("cy", d => yLinearScale(d[chosenYAxis]))
-        
-        .attr("r", 20)
+        .attr("r", 8)
         .attr("fill", "blue")
-        .attr("opacity", ".5")
+        .attr("opacity", "1")
+
+       
+    var textGroup =    chartGroup.selectAll("text")
+        .data(census)
+        .enter()
+        .append("text")
+        .text(function (d) {return `${d.abbr}`})
+        .attr("font-family", "sans-serif")
+        .attr("font-size", "8px")
+        .attr("fill", "green");
+   
         
-console.log(function (d) {return d.abbr})
 
 //Y Lables 
     var YlabelsGroup = chartGroup.append("g")
@@ -247,9 +271,10 @@ console.log(function (d) {return d.abbr})
 
         // updates circles with new x values
         circlesGroup = renderXCircles(circlesGroup, xLinearScale, chosenXAxis);
-
         // updates tooltips with new info
         circlesGroup = updateToolTip(chosenXAxis, chosenYAxis, circlesGroup);
+        
+        textGroup = xrenderText(textGroup, xLinearScale, chosenXAxis)
 
         // changes classes to change bold text
         if (chosenXAxis === "poverty") {
@@ -275,7 +300,7 @@ console.log(function (d) {return d.abbr})
             .classed("active", false)
             .classed("inactive", true);    
         }
-        else 
+        else {
         ageLabel
         .classed("active", false)
         .classed("inactive", true);
@@ -285,6 +310,7 @@ console.log(function (d) {return d.abbr})
         incomeLabel
         .classed("active", true)
         .classed("inactive", false);   
+        }
       }
     });
 
@@ -311,41 +337,43 @@ console.log(function (d) {return d.abbr})
 
         // updates tooltips with new info
         circlesGroup = updateToolTip(chosenYAxis, chosenXAxis, circlesGroup);
+        textGroup = yrenderText(textGroup, yLinearScale, chosenYAxis)
 
         // changes classes to change bold text
-        if (chosenYAxis === "healthcare") {
-        healthLabel
-            .classed("active", true)
-            .classed("inactive", false);
-        smokeLabel
+        switch(chosenYAxis){
+            case 'smokes':
+            healthLabel
             .classed("active", false)
-            .classed("inactive", true);
-        obisityLabel
-            .classed("active", false)
-            .classed("inactive", true);
-                
-        }
-        else if (chosenXAxis === "smokes"){
-        healthLabel
-            .classed("active", false)
-            .classed("inactive", true);
+            .classed("inactive", true)
         smokeLabel
             .classed("active", true)
-            .classed("inactive", false);
+            .classed("inactive", false)
         obisityLabel
             .classed("active", false)
-            .classed("inactive", true);    
+            .classed("inactive", true)
+                break;
+            case 'obesity':
+            healthLabel
+            .classed("active", false)
+            .classed("inactive", true);
+            smokeLabel
+            .classed("active", false)
+            .classed("inactive", true);
+            obisityLabel
+            .classed("active", true)
+            .classed("inactive", false);
+                break;
+            case 'healthcare':
+            healthLabel
+            .classed("active", true)
+            .classed("inactive", false)
+            smokeLabel
+            .classed("active", false)
+            .classed("inactive", true)
+            obisityLabel
+            .classed("active", false)
+            .classed("inactive", true)
         }
-        else 
-        healthLabel
-        .classed("active", false)
-        .classed("inactive", true);
-        smokeLabel
-        .classed("active", false)
-        .classed("inactive", true);
-        obisityLabel
-        .classed("active", true)
-        .classed("inactive", false);   
-      }
+    } 
     });
-    })
+});

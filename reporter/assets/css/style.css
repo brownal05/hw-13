@@ -22,9 +22,10 @@
     font: 12px sans-serif;
     color: white;
     text-align: center;
-    background: #551aaf;
+    background: #010002;
     border: 0;
     border-radius: 10px;
+    
   }
   
   .axis-text {
@@ -37,7 +38,7 @@
   .active {
     font-weight: bold;
     fill: #000;
-    fill: #551aaf;
+    fill: #2e15bd;
     transition: fill 0.3s ease-out;
     text-anchor: middle;
   }
@@ -54,3 +55,6 @@
     cursor: pointer;
   }
   
+ circle {
+     color : black;
+ } 
